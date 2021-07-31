@@ -1,30 +1,35 @@
-# This is a basic workflow that is manually triggered
+# This is a basic workflow to help you get started with Actions
 
-name: Manual workflow
+name: Website Backend workflow
 
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
 on:
-  workflow_dispatch:
-    # Inputs the workflow accepts.
-    inputs:
-      name:
-        # Friendly description to be shown in the UI instead of 'name'
-        description: 'Person to greet'
-        # Default value if no value is explicitly provided
-        default: 'World'
-        # Input has to be provided for the workflow to run
-        required: true
+  push:
+    paths:
+    - 'backend/**'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "greet"
-  greet:
-    # The type of runner that the job will run on
+  main:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.6]
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell
-    - name: Send greeting
-      run: echo "Hello ${{ github.event.inputs.name }}"
+      - 
+        name: Run a one-line script
+        uses: actions/checkout@v2
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      -
+        name: Installing dependencies from Web API (Django App)
+        run: cd backend/ && python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+            
+      -
+        name: Running Unit Tests from Web API (Django App)
+        run: cd backend/ && coverage run --source='.' --omit='./*/apps.py,./*/__init__.py,sucre_backend/*,manage.py'  manage.py test && coverage report
+
