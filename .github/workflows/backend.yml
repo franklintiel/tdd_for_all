@@ -27,7 +27,7 @@ jobs:
       
       -
         name: Installing dependencies from Web API (Django App)
-        run: cd backend/ && python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+        run: mkdir files && mkdir files/logs && mkdir files/media && cd backend/  && python -m pip install --upgrade pip && python -m pip install -r requirements.txt
             
       -
         name: Running Unit Tests from Web API (Django App)

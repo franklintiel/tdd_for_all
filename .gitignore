@@ -1,6 +1,5 @@
-frontend/
-backend/
 tasks/
-postgres/
-pgadmin/
+volumes/
 .python-version
+*/.env
+files/
