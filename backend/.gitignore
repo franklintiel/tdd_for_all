@@ -1,0 +1,8 @@
+*.pyc
+.env
+!.env/example
+.pylintrc
+.python-version
+db.sqlite3
+.coverage
+
