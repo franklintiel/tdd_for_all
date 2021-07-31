@@ -1,0 +1,71 @@
+version: "3.3"
+
+
+services:
+  db:
+    restart: always
+    container_name: website_db
+    image: "postgres:12"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      ./postgres/.env
+    expose:
+      - 5432
+    ports:
+      - 5433:5432
+  pgadmin:
+    restart: always
+    container_name: website_pgadmin
+    image: "dpage/pgadmin4"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    env_file:
+      ./pgadmin/.env
+    ports:
+      - 5050:80
+  frontend:
+    restart: always
+    container_name: website_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - frontend_files:/app/build
+    ports:
+      - 3000:3000
+    env_file:
+      ./frontend/.env.production.local
+    environment:
+      - NODE_ENV=production
+  api:
+    restart: always
+    container_name: website_api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - backend_logs:/usr/src/app/files/logs
+      - backend_media:/usr/src/app/files/media
+      - backend_static:/usr/src/app/backend/static
+    env_file:
+      ./backend/.env
+    expose:
+      - 8000
+    ports:
+      - 8000:8000
+
+volumes:
+  postgres_data:
+    external: true
+  pgadmin_data:
+    external: true
+  backend_logs:
+    external: true
+  backend_static:
+    external: true
+  backend_media:
+    external: true
+  frontend_files:
+    external: true
+
