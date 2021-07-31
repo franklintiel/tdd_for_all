@@ -1,0 +1,134 @@
+#!/bin/bash
+
+ROOT_DIR=$(pwd)
+VOLUMES_DIR=${ROOT_DIR}/volumes
+COMMAND=$1
+CONTAINER_NAME=$2
+
+
+function errorExit() {
+  echo "[ERROR]: $1"
+  exit
+}
+
+function createVolume() {
+  {
+    if [ -d "$1" ]; then
+      echo "[WARNING] The DIR '$1' already exist!"
+    else
+      mkdir $1
+      echo "[SUCCESS] The DIR '$1' has been created!"
+    fi
+    
+    if [ -z "$2" ]; then
+      echo ""
+    else
+      docker volume create --driver local --opt type=none --opt device=$1 --opt o=bind $2
+      echo "[SUCCESS] The docker volume '$2' has been created!"
+    fi
+  } || {
+    errorExit "The dir or docker volume cannot be created!"
+  }
+}
+
+function createDockerVolumes() {
+  echo "[INFO] Creating dirs and docker volumes..."
+  createVolume $VOLUMES_DIR
+  POSTGRES_DIR=${VOLUMES_DIR}/postgres_data
+  createVolume $POSTGRES_DIR "postgres_data"
+  PGADMIN_DIR=${VOLUMES_DIR}/pgadmin_data
+  createVolume $PGADMIN_DIR "pgadmin_data"
+  STATIC_DIR=${VOLUMES_DIR}/static
+  createVolume $STATIC_DIR "backend_static"
+  MEDIA_DIR=${VOLUMES_DIR}/media
+  createVolume $MEDIA_DIR "backend_media"
+  LOGS_DIR=${VOLUMES_DIR}/logs
+  createVolume $LOGS_DIR "backend_logs"
+  APP_DIR=${VOLUMES_DIR}/app
+  createVolume $APP_DIR "frontend_files"
+  echo "[INFO] The dirs and docker volumes have been created."
+}
+
+function removeAllDockerVolumes() {
+  echo "[INFO] Removing all docker volumes..."
+  docker volume rm postgres_data pgadmin_data backend_static backend_media backend_logs frontend_files
+  echo "[INFO] Removing dawling docker volumes..."
+  docker volume prune
+  echo "[INFO] Removing volumes dir..."
+  sudo rm -rf ${VOLUMES_DIR}
+  echo "[SUCCESS] All docker volumes related with the project have been removed."
+}
+
+function startContainers() {
+  echo "[INFO] Starting the docker containers..."
+  docker-compose up -d --build
+  echo "[SUCCESS] The Docker containers have been started!."
+}
+
+function stopContainers() {
+  echo "[INFO] Stopping the docker containers..."
+  docker-compose down
+  echo "[SUCCESS] The Docker containers have been stopped."
+}
+
+function removeAllContainers() {
+  echo "[INFO] Removing dawling docker images..."
+  docker image prune
+  echo "[INFO] Removing docker images installed..."
+  docker image prune -a
+  echo "[SUCCESS] All docker images have been removed!"
+}
+
+function displayLogs() {
+  echo "[INFO] Displaying logs from container $1..."
+  docker-compose logs | grep $1
+  echo "[SUCCESS] Logs from container $1 have been displayed!"
+}
+
+function accessContainer() {
+  echo "[INFO] Accessing to container $1..."
+  docker exec -it $1 sh
+}
+
+function runFrontendUnitTests() {
+  echo "[INFO] Running Frontend Unit Tests..."
+  cd frontend/ && yarn test --watchAll=false --coverage
+  echo "[SUCCESS] The Unit tests from Frontend application have been completed."
+}
+
+function runBackendUnitTests() {
+  echo "[INFO] Running Backend Unit tests..."
+  cd backend/ && coverage run --source='.' --omit='./*/apps.py,./*/__init__.py,sucre_backend/*,manage.py'  manage.py test && coverage report
+  echo "[BACKEND] The Unit tests from Backend application have been completed."
+}
+
+
+echo $COMMAND
+
+if [ -z "$COMMAND" ]; then
+  errorExit "The command argument is required"
+elif [ "$COMMAND" == "" ]; then
+  errorExit "The command argument is required"
+elif [ "$COMMAND" == "create_volumes" ]; then
+  createDockerVolumes
+elif [ "$COMMAND" == "remove_volumes" ]; then
+  removeAllDockerVolumes
+elif [ "$COMMAND" == "start_containers" ]; then
+  startContainers
+elif [ "$COMMAND" == "stop_containers" ]; then
+  stopContainers
+elif [ "$COMMAND" == "restart_containers" ]; then
+  stopContainers
+  startContainers
+elif [ "$COMMAND" == "remove_containers" ]; then
+  removeAllContainers
+elif [ "$COMMAND" == "display_logs" ]; then
+  displayLogs $2
+elif [ "$COMMAND" == "access_container" ]; then
+  accessContainer $2
+elif [ "$COMMAND" == "run_frontend_unit_tests" ]; then
+  runFrontendUnitTests
+elif [ "$COMMAND" == "run_backend_unit_tests" ]; then
+  runBackendUnitTests
+fi
+
