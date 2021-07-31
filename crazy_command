@@ -99,9 +99,26 @@ function runFrontendUnitTests() {
 function runBackendUnitTests() {
   echo "[INFO] Running Backend Unit tests..."
   cd backend/ && coverage run --source='.' --omit='./*/apps.py,./*/__init__.py,sucre_backend/*,manage.py'  manage.py test && coverage report
-  echo "[BACKEND] The Unit tests from Backend application have been completed."
+  echo "[SUCCESS] The Unit tests from Backend application have been completed."
 }
 
+function validateLintFrontend() {
+  echo "[INFO] Running Lint in Frontend application..."
+  cd frontend/ && yarn lint
+  echo "[SUCCESS] Lint validation have been validated!"
+}
+
+function validatePrettierFrontend() {
+  echo "[INFO] Running Prettier in Frontend application..."
+  cd frontend/ && yarn prettier
+  echo "[SUCCESS] Prettier validation have been validated!."
+}
+
+function applyPrettierFrontend() {
+  echo "[INFO] Applying Prettier fixes in the Frontend applications..."
+  cd frontend/ && yarn prettier:write
+  echo "[SUCCES] Prettier fixes have been applied!"
+}
 
 echo $COMMAND
 
@@ -130,5 +147,11 @@ elif [ "$COMMAND" == "run_frontend_unit_tests" ]; then
   runFrontendUnitTests
 elif [ "$COMMAND" == "run_backend_unit_tests" ]; then
   runBackendUnitTests
+elif [ "$COMMAND" == "validate_eslint_rules" ]; then
+  validateLintFrontend
+elif [ "$COMMAND" == "validate_prettier_rules" ]; then
+  validatePrettierFrontend
+elif [ "$COMMAND" == "apply_prettier_rules" ]; then
+  applyPrettierFrontend
 fi
 
