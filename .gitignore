@@ -1,4 +1,3 @@
-tasks/
 volumes/
 .python-version
 */.env
